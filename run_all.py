@@ -1,13 +1,36 @@
 """Launch all 3 Gradipin demo apps concurrently."""
 
 import multiprocessing
+import os
 import signal
 import sys
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
+from threading import Thread
 
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).parent / ".env")
+env_file = Path(__file__).parent / ".env"
+if env_file.exists():
+    load_dotenv(env_file)
+
+
+class _HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ok")
+
+    def log_message(self, format, *args):
+        pass
+
+
+def _run_health_server():
+    """Tiny HTTP server on the PORT env var so Render health checks pass."""
+    port = int(os.environ.get("PORT", "8000"))
+    server = HTTPServer(("0.0.0.0", port), _HealthHandler)
+    print(f"  Health-check server listening on :{port}")
+    server.serve_forever()
 
 
 def run_sentiment():
@@ -37,6 +60,9 @@ def main():
     print("  Gradipin Demos — Launching 3 apps...")
     print("=" * 60)
     print()
+
+    health_thread = Thread(target=_run_health_server, daemon=True)
+    health_thread.start()
 
     processes: list[multiprocessing.Process] = []
     for name, target in DEMOS:
