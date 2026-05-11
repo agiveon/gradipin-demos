@@ -1,20 +1,25 @@
-"""Sentiment Analysis Demo — distilbert-base-uncased-finetuned-sst-2-english."""
+"""Sentiment Analysis Demo — VADER (nltk)."""
+
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
+nltk.download("vader_lexicon", quiet=True)
 
 import gradio as gr
 import gradipin
-from transformers import pipeline
 
-classifier = pipeline(
-    "sentiment-analysis",
-    model="distilbert-base-uncased-finetuned-sst-2-english",
-)
+analyzer = SentimentIntensityAnalyzer()
 
 
 def analyze(text: str) -> dict[str, float]:
     if not text.strip():
         return {}
-    results = classifier(text, top_k=2)
-    return {r["label"]: r["score"] for r in results}
+    scores = analyzer.polarity_scores(text)
+    return {
+        "Positive": scores["pos"],
+        "Negative": scores["neg"],
+        "Neutral": scores["neu"],
+    }
 
 
 demo = gr.Interface(
@@ -22,7 +27,7 @@ demo = gr.Interface(
     inputs=gr.Textbox(label="Enter text", placeholder="Type a sentence to analyze..."),
     outputs=gr.Label(label="Sentiment"),
     title="Sentiment Analysis",
-    description="Classifies text as Positive or Negative using DistilBERT.",
+    description="Classifies text sentiment using VADER (Valence Aware Dictionary and sEntiment Reasoner).",
     examples=[
         ["I absolutely love this product, it's amazing!"],
         ["The movie was terrible and a complete waste of time."],

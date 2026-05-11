@@ -1,6 +1,9 @@
 gradio
 gradipin[gradio]
-transformers
-torch
+nltk
+onnxruntime
+faster-whisper
+huggingface-hub
 Pillow
+numpy
 python-dotenv

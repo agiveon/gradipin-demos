@@ -1,24 +1,21 @@
-"""Speech-to-Text Demo — Whisper Tiny."""
+"""Speech-to-Text Demo — Whisper Tiny via faster-whisper (CTranslate2)."""
 
 from pathlib import Path
 
 import gradio as gr
 import gradipin
-from transformers import pipeline
+from faster_whisper import WhisperModel
 
 EXAMPLES_DIR = Path(__file__).parent.parent / "examples"
 
-transcriber = pipeline(
-    "automatic-speech-recognition",
-    model="openai/whisper-tiny",
-)
+model = WhisperModel("tiny", compute_type="int8")
 
 
 def transcribe(audio) -> str:
     if audio is None:
         return ""
-    result = transcriber(audio)
-    return result["text"]
+    segments, _ = model.transcribe(audio)
+    return " ".join(seg.text.strip() for seg in segments)
 
 
 demo = gr.Interface(
@@ -26,7 +23,7 @@ demo = gr.Interface(
     inputs=gr.Audio(type="filepath", label="Record or upload audio"),
     outputs=gr.Textbox(label="Transcription"),
     title="Speech to Text",
-    description="Transcribes audio to text using OpenAI Whisper (tiny).",
+    description="Transcribes audio to text using OpenAI Whisper (tiny) via faster-whisper.",
     examples=[
         [str(EXAMPLES_DIR / "sample_speech.flac")],
     ],
