@@ -4,17 +4,26 @@ from pathlib import Path
 
 import gradio as gr
 import gradipin
-from faster_whisper import WhisperModel
 
 EXAMPLES_DIR = Path(__file__).parent.parent / "examples"
 
-model = WhisperModel("tiny", compute_type="int8")
+_model = None
+
+
+def _load_model():
+    global _model
+    if _model is not None:
+        return
+    from faster_whisper import WhisperModel
+
+    _model = WhisperModel("tiny", compute_type="int8")
 
 
 def transcribe(audio) -> str:
     if audio is None:
         return ""
-    segments, _ = model.transcribe(audio)
+    _load_model()
+    segments, _ = _model.transcribe(audio)
     return " ".join(seg.text.strip() for seg in segments)
 
 
