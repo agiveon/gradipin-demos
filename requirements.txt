@@ -1,0 +1,6 @@
+gradio
+gradipin[gradio]
+transformers
+torch
+Pillow
+python-dotenv
